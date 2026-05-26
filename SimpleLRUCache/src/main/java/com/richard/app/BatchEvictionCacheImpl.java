@@ -31,12 +31,31 @@ public class BatchEvictionCacheImpl<K,V> implements ICache<K,V>{
 	
 	@Override
 	public V get(K key) {
-		// TODO Auto-generated method stub
 		CacheValue<V> item = cache.get(key);
+		// this is a happy cached solution
+		if (item != null) {
+			item.setLastAccessTimeInNanosec(System.nanoTime());
+			return item.getVal();
+		}
+		
+		// otherwise will perform a computeIfAbsent, using concurrenthashmap key locking solution
+		CacheValue<V> calcEntry = cache.computeIfAbsent(key, k->{
+			CacheValue<V> result = new CacheValue(this.valueComputingProcess.apply(key), System.nanoTime());
+			if (cache.size() > this.capacity) {
+				evict();
+			}
+			return result;
+		});
 		
 		
 		return null;
 	}
+	
+	
+	private void evict() {
+		
+	}
+	
 	
 	private static class CacheValue<V> {
 		final V val;
