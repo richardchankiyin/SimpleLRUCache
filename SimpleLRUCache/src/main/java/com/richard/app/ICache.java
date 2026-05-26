@@ -6,4 +6,5 @@ public interface ICache<K,V> {
 	
 	public boolean hasKey(K key);
 
+	public int currentSize();
 }
