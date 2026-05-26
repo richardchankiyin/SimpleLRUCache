@@ -31,7 +31,7 @@ public class BatchEvictionCacheImpl<K,V> implements ICache<K,V>{
 	
 	@Override
 	public V get(K key) {
-		CacheValue<V> item = cache.get(key);
+		CacheValue<V> item = this.cache.get(key);
 		// this is a happy cached solution
 		if (item != null) {
 			item.setLastAccessTimeInNanosec(System.nanoTime());
@@ -39,21 +39,21 @@ public class BatchEvictionCacheImpl<K,V> implements ICache<K,V>{
 		}
 		
 		// otherwise will perform a computeIfAbsent, using concurrenthashmap key locking solution
-		CacheValue<V> calcEntry = cache.computeIfAbsent(key, k->{
+		CacheValue<V> calcEntry = this.cache.computeIfAbsent(key, k->{
 			CacheValue<V> result = new CacheValue(this.valueComputingProcess.apply(key), System.nanoTime());
-			if (cache.size() > this.capacity) {
+			if (this.cache.size() > this.capacity) {
 				evict();
 			}
 			return result;
 		});
 		
 		
-		return null;
+		return calcEntry.getVal();
 	}
 	
 	
 	private void evict() {
-		
+		//TODO implementation
 	}
 	
 	
@@ -73,6 +73,12 @@ public class BatchEvictionCacheImpl<K,V> implements ICache<K,V>{
 		void setLastAccessTimeInNanosec(long updatetime) {
 			this.lastAccessTimeInNanosec = updatetime;
 		}
+	}
+
+
+	@Override
+	public boolean hasKey(K key) {
+		return this.cache.containsKey(key);
 	}
 
 	
